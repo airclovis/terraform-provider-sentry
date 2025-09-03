@@ -171,6 +171,20 @@ func resourceSentryDashboard() *schema.Resource {
 					},
 				},
 			},
+			"period": {
+				Description: "The saved time range period for this dashboard.",
+				Type:        schema.TypeString,
+				Optional:    true,
+			},
+			"projects": {
+				Description: "The saved projects filter for this dashboard.",
+				Type:        schema.TypeList,
+				Elem: &schema.Schema{
+					Type:     schema.TypeInt,
+					Optional: false,
+				},
+				Optional: true,
+			},
 			"internal_id": {
 				Description: "The internal ID for this dashboard.",
 				Type:        schema.TypeString,
@@ -183,6 +197,18 @@ func resourceSentryDashboard() *schema.Resource {
 func resourceSentryDashboardObject(d *schema.ResourceData) *sentry.Dashboard {
 	dashboard := &sentry.Dashboard{
 		Title: sentry.String(d.Get("title").(string)),
+	}
+
+	if period, ok := d.GetOk("period"); ok {
+		dashboard.Period = sentry.String(period.(string))
+	}
+
+	if projects, ok := d.GetOk("projects"); ok {
+		projects := projects.([]interface{})
+		dashboard.Projects = make([]*int, 0, len(projects))
+		for _, project := range projects {
+			dashboard.Projects = append(dashboard.Projects, sentry.Int(project.(int)))
+		}
 	}
 
 	if widgetList, ok := d.GetOk("widget"); ok {
